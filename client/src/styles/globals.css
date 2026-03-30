@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: #0d0d0d;
+  color: #fff;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #1a1a1a; }
+::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+/* Range input */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: #374151;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #c9a84c;
+  cursor: pointer;
+  border: 2px solid #fff;
+}
+
+/* Card 3D flip perspective */
+.perspective { perspective: 600px; }
+
+@keyframes pulseRing {
+  0% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 0 0 rgba(201, 168, 76, 0.5); }
+  50% { transform: scale(1.04); opacity: 1; box-shadow: 0 0 0 8px rgba(201, 168, 76, 0); }
+  100% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 0 0 rgba(201, 168, 76, 0); }
+}
+
+@keyframes flipCard {
+  0% { transform: rotateY(90deg) scale(0.8); opacity: 0; }
+  100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+}
+
+@keyframes slideIn {
+  0% { transform: translateY(-8px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes winnerPop {
+  0% { transform: scale(0.4) rotate(-5deg); opacity: 0; }
+  70% { transform: scale(1.05) rotate(1deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Gold glow for active player */
+.seat-active {
+  box-shadow: 0 0 20px rgba(201, 168, 76, 0.4);
+}
+
+/* Mobile layout */
+@media (max-width: 768px) {
+  html, body, #root { overflow: auto; }
+}
