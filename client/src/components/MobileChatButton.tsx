@@ -28,11 +28,11 @@ export default function MobileChatButton() {
 
   return (
     <>
-      {/* Preview bubbles — above action panel, below hole cards */}
+      {/* Preview bubbles — top of table, clear of player seats */}
       {!chatOpen && latest2.length > 0 && (
         <div
           className="fixed z-30 flex flex-col gap-1.5"
-          style={{ bottom: 175, left: 8, maxWidth: '70vw' }}
+          style={{ top: 80, left: 8, right: 70 }}
         >
           {latest2.map((msg) => (
             <button

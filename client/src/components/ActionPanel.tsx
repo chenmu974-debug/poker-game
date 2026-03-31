@@ -52,8 +52,8 @@ export default function ActionPanel() {
   const effectiveMin = Math.max(minRaise, bigBlind, gameState.currentBet);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-20">
-      <div className="w-full px-3 pb-4">
+    <div className="fixed bottom-0 left-0 right-0 md:right-64 z-20">
+      <div className="w-full px-3 pb-4 md:max-w-2xl md:mx-auto">
         <div className="bg-gray-950/95 backdrop-blur border border-gray-700 rounded-2xl shadow-2xl p-4">
           {/* Timer row */}
           <div className="flex items-center justify-between mb-3">
