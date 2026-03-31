@@ -12,8 +12,8 @@ export default function MobileChatButton() {
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [showEnvelope, setShowEnvelope] = useState(false);
 
-  // Latest 3 messages (including own), always up-to-date
-  const latest3 = chatMessages.slice(-3);
+  // Latest 2 messages for preview
+  const latest2 = chatMessages.slice(-2);
 
   const openChat = () => {
     setChatOpen(true);
@@ -28,25 +28,25 @@ export default function MobileChatButton() {
 
   return (
     <>
-      {/* Preview bubbles — fixed above chat button, always visible when chat is closed */}
-      {!chatOpen && latest3.length > 0 && (
+      {/* Preview bubbles — above action panel, below hole cards */}
+      {!chatOpen && latest2.length > 0 && (
         <div
-          className="fixed z-40 flex flex-col gap-1.5 items-end"
-          style={{ right: 12, bottom: 130, maxWidth: '65vw' }}
+          className="fixed z-30 flex flex-col gap-1.5"
+          style={{ bottom: 175, left: 8, maxWidth: '70vw' }}
         >
-          {latest3.map((msg) => (
+          {latest2.map((msg) => (
             <button
               key={msg.id}
               onClick={openChat}
-              className="w-full flex items-start gap-2 bg-gray-900/97 border border-gray-600 rounded-2xl px-4 py-2.5 shadow-2xl text-left animate-slide-up"
+              className="flex items-start gap-2 bg-gray-900/95 border border-gray-600 rounded-xl px-3 py-2 shadow-xl text-left"
             >
               <span
-                className={`font-semibold whitespace-nowrap mt-0.5 ${msg.sessionId === mySessionId ? 'text-gold' : 'text-gray-300'}`}
-                style={{ fontSize: 15 }}
+                className={`font-semibold whitespace-nowrap ${msg.sessionId === mySessionId ? 'text-gold' : 'text-gray-300'}`}
+                style={{ fontSize: 14 }}
               >
                 {msg.sessionId === mySessionId ? '我' : msg.name}:
               </span>
-              <span className="text-white break-words line-clamp-2" style={{ fontSize: 15 }}>
+              <span className="text-white line-clamp-1" style={{ fontSize: 14 }}>
                 {msg.message}
               </span>
             </button>
@@ -54,12 +54,15 @@ export default function MobileChatButton() {
         </div>
       )}
 
-      {/* Floating button stack */}
-      <div className="fixed bottom-4 right-4 z-40 flex flex-col gap-3 items-center">
+      {/* Buttons — top-right, vertically stacked, 44px */}
+      <div
+        className="fixed z-40 flex flex-col gap-2"
+        style={{ top: 60, right: 8 }}
+      >
         {!isSpectator && (
           <button
             onClick={() => setShowEnvelope(true)}
-            className="w-14 h-14 bg-red-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl active:scale-95 transition-transform"
+            className="w-11 h-11 bg-red-600 text-white rounded-full shadow-lg flex items-center justify-center text-xl active:scale-95 transition-transform"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             🧧
@@ -67,14 +70,14 @@ export default function MobileChatButton() {
         )}
         <button
           onClick={() => { setEmojiOpen((v) => !v); setChatOpen(false); }}
-          className="w-14 h-14 bg-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl active:scale-95 transition-transform"
+          className="w-11 h-11 bg-purple-600 text-white rounded-full shadow-lg flex items-center justify-center text-xl active:scale-95 transition-transform"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           😊
         </button>
         <button
           onClick={openChat}
-          className="w-14 h-14 bg-gold text-casino rounded-full shadow-2xl flex items-center justify-center text-2xl active:scale-95 transition-transform"
+          className="w-11 h-11 bg-gold text-casino rounded-full shadow-lg flex items-center justify-center text-xl active:scale-95 transition-transform"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           💬

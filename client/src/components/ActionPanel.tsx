@@ -53,7 +53,7 @@ export default function ActionPanel() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-20">
-      <div className="max-w-2xl mx-auto px-4 pb-4">
+      <div className="w-full px-3 pb-4">
         <div className="bg-gray-950/95 backdrop-blur border border-gray-700 rounded-2xl shadow-2xl p-4">
           {/* Timer row */}
           <div className="flex items-center justify-between mb-3">
