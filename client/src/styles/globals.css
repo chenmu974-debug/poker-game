@@ -99,3 +99,12 @@ input[type="range"]::-webkit-slider-thumb {
 .animate-bounce-fade {
   animation: bounce-fade 3.5s ease-out forwards;
 }
+
+@keyframes slide-up {
+  0% { transform: translateY(12px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.2s ease-out forwards;
+}

@@ -108,7 +108,7 @@ export default function ActionPanel() {
           <div className="flex gap-2">
             <button
               onClick={() => emit('fold')}
-              className="flex-1 py-3 bg-red-900/80 text-red-300 font-bold rounded-xl hover:bg-red-800 transition-all border border-red-800/50 text-sm"
+              className="flex-1 py-4 md:py-3 bg-red-900/80 text-red-300 font-bold rounded-xl hover:bg-red-800 active:scale-95 transition-all border border-red-800/50 text-base md:text-sm"
             >
               弃牌
             </button>
@@ -116,14 +116,14 @@ export default function ActionPanel() {
             {canCheck ? (
               <button
                 onClick={() => emit('check')}
-                className="flex-1 py-3 bg-gray-700 text-white font-bold rounded-xl hover:bg-gray-600 transition-all border border-gray-600 text-sm"
+                className="flex-1 py-4 md:py-3 bg-gray-700 text-white font-bold rounded-xl hover:bg-gray-600 active:scale-95 transition-all border border-gray-600 text-base md:text-sm"
               >
                 过牌
               </button>
             ) : (
               <button
                 onClick={() => emit('call', callAmount)}
-                className="flex-1 py-3 bg-blue-800 text-blue-100 font-bold rounded-xl hover:bg-blue-700 transition-all border border-blue-700 text-sm"
+                className="flex-1 py-4 md:py-3 bg-blue-800 text-blue-100 font-bold rounded-xl hover:bg-blue-700 active:scale-95 transition-all border border-blue-700 text-base md:text-sm"
               >
                 跟注 ${callAmount}
               </button>
@@ -138,7 +138,7 @@ export default function ActionPanel() {
                     setShowRaise(true);
                   }
                 }}
-                className="flex-1 py-3 bg-gold/90 text-casino font-bold rounded-xl hover:bg-gold transition-all text-sm"
+                className="flex-1 py-4 md:py-3 bg-gold/90 text-casino font-bold rounded-xl hover:bg-gold active:scale-95 transition-all text-base md:text-sm"
               >
                 {showRaise ? `加注 $${raiseAmount}` : '加注 ▲'}
               </button>
@@ -146,7 +146,7 @@ export default function ActionPanel() {
 
             <button
               onClick={() => emit('all_in')}
-              className="flex-1 py-3 bg-yellow-700/80 text-yellow-200 font-bold rounded-xl hover:bg-yellow-700 transition-all border border-yellow-700/50 text-sm"
+              className="flex-1 py-4 md:py-3 bg-yellow-700/80 text-yellow-200 font-bold rounded-xl hover:bg-yellow-700 active:scale-95 transition-all border border-yellow-700/50 text-base md:text-sm"
             >
               全押
             </button>

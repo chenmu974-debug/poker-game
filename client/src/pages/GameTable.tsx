@@ -10,6 +10,7 @@ import EmojiReactions from '../components/EmojiReactions';
 import FoldTaunt from '../components/FoldTaunt';
 import VoiceChat from '../components/VoiceChat';
 import RedEnvelopeModal from '../components/RedEnvelopeModal';
+import MobileChatButton from '../components/MobileChatButton';
 
 // Seat positions for up to 8 players (percentages of table width/height)
 // Index 0 = bottom center (you), going counter-clockwise
@@ -106,8 +107,8 @@ export default function GameTable() {
         </div>
       </div>
 
-      {/* Right sidebar */}
-      <div className="w-64 flex flex-col border-l border-gray-800 bg-gray-950">
+      {/* Right sidebar — hidden on mobile */}
+      <div className="hidden md:flex w-64 flex-col border-l border-gray-800 bg-gray-950">
         {/* Header */}
         <div className="p-2 border-b border-gray-800 flex items-center justify-between flex-shrink-0">
           <div className="text-gray-500 text-xs">第 {gameState.handNumber} 局 · {phaseLabel(gameState.phase)}</div>
@@ -135,6 +136,11 @@ export default function GameTable() {
       <EmojiReactions />
       <FoldTaunt />
       {showRedEnvelope && <RedEnvelopeModal onClose={() => setShowRedEnvelope(false)} />}
+
+      {/* Mobile floating chat button */}
+      <div className="md:hidden">
+        <MobileChatButton />
+      </div>
     </div>
   );
 }
