@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import socket from '../socket';
-import RedEnvelopeModal from '../components/RedEnvelopeModal';
 
 const AVATARS = ['🎩', '🦁', '🐯', '🦊', '🐺', '🐻', '🦝', '🐼'];
 
 export default function WaitingRoom() {
   const { roomState, mySessionId, addToast } = useGameStore();
   const [copied, setCopied] = useState(false);
-  const [showRedEnvelope, setShowRedEnvelope] = useState(false);
 
   if (!roomState) return null;
 
@@ -119,18 +117,6 @@ export default function WaitingRoom() {
           )}
         </div>
 
-        {/* Red Envelope */}
-        {roomState.players.length >= 2 && (
-          <div className="mb-4 text-center">
-            <button
-              onClick={() => setShowRedEnvelope(true)}
-              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-sm transition-colors"
-            >
-              🧧 发红包
-            </button>
-          </div>
-        )}
-
         {/* Actions */}
         <div className="flex gap-3">
           <button
@@ -160,7 +146,6 @@ export default function WaitingRoom() {
           )}
         </div>
       </div>
-      {showRedEnvelope && <RedEnvelopeModal onClose={() => setShowRedEnvelope(false)} />}
     </div>
   );
 }

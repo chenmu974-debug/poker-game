@@ -607,11 +607,6 @@ export function setupGameManager(io: Server) {
       const room = getRoom(roomCode);
       if (!room) { socket.emit('error', { message: '房间不存在' }); return; }
 
-      // Block during active hand (allow in waiting room or between hands)
-      if (room.gameState && room.gameState.phase !== 'waiting' && room.gameState.playersToAct.length > 0) {
-        socket.emit('error', { message: '游戏进行中无法发红包，请等待本局结束' }); return;
-      }
-
       const sender = room.players.find((p) => p.sessionId === sessionId);
       if (!sender) { socket.emit('error', { message: '玩家不存在' }); return; }
 
