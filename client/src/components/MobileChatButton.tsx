@@ -59,8 +59,8 @@ export default function MobileChatButton() {
       {/* Preview bubbles */}
       {!open && previews.length > 0 && (
         <div
-          className="fixed bottom-24 right-4 z-40 flex flex-col-reverse gap-2 items-end"
-          style={{ width: '80vw' }}
+          className="fixed z-40 flex flex-col-reverse gap-2 items-end"
+          style={{ right: 12, bottom: 130, maxWidth: '65vw' }}
         >
           {previews.map((item) => (
             <button
