@@ -55,8 +55,14 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 @keyframes flipCard {
-  0% { transform: rotateY(90deg) scale(0.8); opacity: 0; }
-  100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+  0%   { transform: rotateY(90deg) scale(0.85); }
+  100% { transform: rotateY(0deg)  scale(1); }
+}
+
+@keyframes dealCard {
+  0%   { transform: translateY(-70px) scale(0.4) rotate(-20deg); opacity: 0; }
+  65%  { transform: translateY(4px)   scale(1.05) rotate(2deg);  opacity: 1; }
+  100% { transform: translateY(0)     scale(1)    rotate(0deg);  opacity: 1; }
 }
 
 @keyframes slideIn {
@@ -94,6 +100,10 @@ input[type="range"]::-webkit-slider-thumb {
 
 .animate-float-up {
   animation: float-up 3s ease-out forwards;
+}
+
+.animate-deal-card {
+  animation: dealCard 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animate-bounce-fade {

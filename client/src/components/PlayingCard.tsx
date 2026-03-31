@@ -18,19 +18,16 @@ interface Props {
 }
 
 export default function PlayingCard({ card, faceDown, small, highlighted, animateIn }: Props) {
-  const size = small
-    ? 'w-8 h-11 text-xs'
-    : 'w-12 h-16 text-sm';
+  const size = small ? 'w-8 h-11 text-xs' : 'w-12 h-16 text-sm';
 
   if (faceDown || !card) {
     return (
       <div
-        className={`${size} rounded-md border-2 border-gray-600 flex items-center justify-center shadow-lg ${
-          animateIn ? 'animate-flip-card' : ''
-        }`}
+        className={`${size} rounded-md border-2 flex items-center justify-center ${animateIn ? 'animate-flip-card' : ''}`}
         style={{
           background: 'repeating-linear-gradient(45deg, #1e3a5f, #1e3a5f 2px, #1a3050 2px, #1a3050 8px)',
           borderColor: '#2a4a7f',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
         }}
       >
         <span className="text-blue-900 opacity-30 text-lg">🂠</span>
@@ -43,10 +40,12 @@ export default function PlayingCard({ card, faceDown, small, highlighted, animat
 
   return (
     <div
-      className={`${size} rounded-md bg-white shadow-lg flex flex-col p-0.5 select-none relative
-        ${highlighted ? 'ring-2 ring-gold shadow-gold/50 shadow-lg' : ''}
-        ${animateIn ? 'animate-flip-card' : ''}
-        border border-gray-200`}
+      className={`${size} rounded-md bg-white flex flex-col p-0.5 select-none relative border border-gray-200 ${animateIn ? 'animate-flip-card' : ''}`}
+      style={{
+        boxShadow: highlighted
+          ? '0 0 0 2px #c9a84c, 0 4px 12px rgba(0,0,0,0.4)'
+          : '0 2px 6px rgba(0,0,0,0.35)',
+      }}
     >
       {/* Top-left */}
       <div className={`leading-none font-bold ${isRed ? 'text-red-600' : 'text-gray-900'}`}>
@@ -58,9 +57,7 @@ export default function PlayingCard({ card, faceDown, small, highlighted, animat
         <span className={small ? 'text-base' : 'text-xl'}>{symbol}</span>
       </div>
       {/* Bottom-right (rotated) */}
-      <div
-        className={`leading-none font-bold self-end rotate-180 ${isRed ? 'text-red-600' : 'text-gray-900'}`}
-      >
+      <div className={`leading-none font-bold self-end rotate-180 ${isRed ? 'text-red-600' : 'text-gray-900'}`}>
         <div className={small ? 'text-[10px]' : 'text-xs'}>{card.rank}</div>
         <div className={small ? 'text-[10px]' : 'text-xs'}>{symbol}</div>
       </div>

@@ -11,9 +11,11 @@ interface Props {
   tablePosition: number;
   isTaunted?: boolean;
   onTaunt?: (sessionId: string, name: string) => void;
+  /** ms delay for [card0, card1] deal animation; undefined = no animation */
+  dealDelays?: [number, number];
 }
 
-export default function PlayerSeat({ player, isMe, tablePosition, isTaunted, onTaunt }: Props) {
+export default function PlayerSeat({ player, isMe, tablePosition, isTaunted, onTaunt, dealDelays }: Props) {
   const isFolded = player.status === 'folded';
   const isAllIn = player.status === 'all-in';
   const isEliminated = player.status === 'eliminated';
@@ -33,13 +35,17 @@ export default function PlayerSeat({ player, isMe, tablePosition, isTaunted, onT
       {/* Hole cards (top of table = show below seat) */}
       {!cardsAbove && player.holeCards.length > 0 && (
         <div className="flex gap-1 mb-1">
-          {player.isHoleCardsVisible
-            ? player.holeCards.map((c, i) => (
-                <PlayingCard key={i} card={c} small />
-              ))
-            : player.holeCards.map((_, i) => (
-                <PlayingCard key={i} faceDown small />
-              ))}
+          {player.holeCards.map((c, i) => (
+            <div
+              key={i}
+              className={dealDelays ? 'animate-deal-card' : ''}
+              style={dealDelays ? { animationDelay: `${dealDelays[i] ?? 0}ms`, animationFillMode: 'both' } : undefined}
+            >
+              {player.isHoleCardsVisible
+                ? <PlayingCard card={c} small />
+                : <PlayingCard faceDown small />}
+            </div>
+          ))}
         </div>
       )}
       {!cardsAbove && player.holeCards.length === 0 && !isFolded && !isEliminated && (
@@ -142,13 +148,17 @@ export default function PlayerSeat({ player, isMe, tablePosition, isTaunted, onT
       {/* Hole cards (bottom half of table) */}
       {cardsAbove && player.holeCards.length > 0 && (
         <div className="flex gap-1 mt-1">
-          {player.isHoleCardsVisible
-            ? player.holeCards.map((c, i) => (
-                <PlayingCard key={i} card={c} small />
-              ))
-            : player.holeCards.map((_, i) => (
-                <PlayingCard key={i} faceDown small />
-              ))}
+          {player.holeCards.map((c, i) => (
+            <div
+              key={i}
+              className={dealDelays ? 'animate-deal-card' : ''}
+              style={dealDelays ? { animationDelay: `${dealDelays[i] ?? 0}ms`, animationFillMode: 'both' } : undefined}
+            >
+              {player.isHoleCardsVisible
+                ? <PlayingCard card={c} small />
+                : <PlayingCard faceDown small />}
+            </div>
+          ))}
         </div>
       )}
     </div>

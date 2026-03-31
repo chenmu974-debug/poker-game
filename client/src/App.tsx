@@ -48,7 +48,16 @@ function App() {
 
     socket.on('game_state', (state) => setGameState(state));
 
-    socket.on('your_turn', (info) => setTurnInfo(info));
+    socket.on('your_turn', (info) => {
+      const phase = useGameStore.getState().gameState?.phase;
+      // Delay action panel until community card flip finishes
+      const flipDelay = phase === 'flop' ? 1400 : (phase === 'turn' || phase === 'river') ? 700 : 0;
+      if (flipDelay > 0) {
+        setTimeout(() => setTurnInfo(info), flipDelay);
+      } else {
+        setTurnInfo(info);
+      }
+    });
 
     socket.on('action_broadcast', ({ playerName, action, amount }) => {
       const labels: Record<string, string> = {

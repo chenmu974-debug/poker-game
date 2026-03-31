@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGameStore, PersonalizedPlayer } from '../store/gameStore';
 import PlayerSeat from '../components/PlayerSeat';
 import CommunityCards from '../components/CommunityCards';
@@ -30,6 +30,19 @@ export default function GameTable() {
   const { gameState, mySessionId, showWinnerOverlay, winners, isSpectator, currentRoomCode, tauntedSessionId } = useGameStore();
   const [showRedEnvelope, setShowRedEnvelope] = useState(false);
   const [tauntTarget, setTauntTarget] = useState<{ sessionId: string; name: string } | null>(null);
+
+  // Deal animation: fires when handNumber increases
+  const prevHandRef = useRef(gameState?.handNumber ?? 0);
+  const [dealingHandNum, setDealingHandNum] = useState<number | null>(null);
+  useEffect(() => {
+    if (!gameState) return;
+    if (gameState.handNumber !== prevHandRef.current) {
+      prevHandRef.current = gameState.handNumber;
+      setDealingHandNum(gameState.handNumber);
+      // Clear after all cards dealt (8 seats × 2 cards × 150ms + buffer)
+      setTimeout(() => setDealingHandNum(null), 8 * 2 * 150 + 800);
+    }
+  }, [gameState?.handNumber]);
   if (!gameState) return null;
 
   const { players } = gameState;
@@ -43,6 +56,16 @@ export default function GameTable() {
     const visualSeat = myIdx >= 0 ? (i - myIdx + players.length) % players.length : i;
     orderedPlayers[visualSeat] = players[i];
   }
+
+  // Compute per-visual-seat deal delays (clockwise from dealer)
+  const dealerVisualSeat = orderedPlayers.findIndex((p) => p?.isDealer);
+  const activeSeatCount = orderedPlayers.filter(Boolean).length;
+  const getDealDelays = (visualIdx: number): [number, number] => {
+    const base = dealerVisualSeat >= 0
+      ? (visualIdx - dealerVisualSeat - 1 + activeSeatCount) % activeSeatCount
+      : visualIdx;
+    return [base * 150, (activeSeatCount + base) * 150];
+  };
 
   return (
     <div className="h-screen bg-casino flex overflow-hidden">
@@ -104,6 +127,7 @@ export default function GameTable() {
                   tablePosition={visualIdx}
                   isTaunted={tauntedSessionId === player.sessionId}
                   onTaunt={!isMe && !isSpectator ? (sid, name) => setTauntTarget({ sessionId: sid, name }) : undefined}
+                  dealDelays={dealingHandNum !== null ? getDealDelays(visualIdx) : undefined}
                 />
               </div>
             );
