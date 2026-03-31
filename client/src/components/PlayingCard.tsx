@@ -27,7 +27,6 @@ export default function PlayingCard({ card, faceDown, small, highlighted, animat
         style={{
           background: 'repeating-linear-gradient(45deg, #1e3a5f, #1e3a5f 2px, #1a3050 2px, #1a3050 8px)',
           borderColor: '#2a4a7f',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
         }}
       >
         <span className="text-blue-900 opacity-30 text-lg">🂠</span>
@@ -55,11 +54,6 @@ export default function PlayingCard({ card, faceDown, small, highlighted, animat
       {/* Center suit */}
       <div className={`flex-1 flex items-center justify-center font-bold ${isRed ? 'text-red-600' : 'text-gray-900'}`}>
         <span className={small ? 'text-base' : 'text-xl'}>{symbol}</span>
-      </div>
-      {/* Bottom-right (rotated) */}
-      <div className={`leading-none font-bold self-end rotate-180 ${isRed ? 'text-red-600' : 'text-gray-900'}`}>
-        <div className={small ? 'text-[10px]' : 'text-xs'}>{card.rank}</div>
-        <div className={small ? 'text-[10px]' : 'text-xs'}>{symbol}</div>
       </div>
     </div>
   );

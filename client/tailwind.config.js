@@ -29,8 +29,8 @@ export default {
           '100%': { transform: 'scale(1)', opacity: '0.8' },
         },
         flipCard: {
-          '0%': { transform: 'rotateY(90deg)', opacity: '0' },
-          '100%': { transform: 'rotateY(0deg)', opacity: '1' },
+          '0%': { transform: 'rotateY(90deg) scale(0.85)' },
+          '100%': { transform: 'rotateY(0deg) scale(1)' },
         },
         slideIn: {
           '0%': { transform: 'translateY(-10px)', opacity: '0' },
