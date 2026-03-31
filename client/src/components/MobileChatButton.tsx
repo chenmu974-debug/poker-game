@@ -59,19 +59,19 @@ export default function MobileChatButton() {
       {/* Preview bubbles */}
       {!open && previews.length > 0 && (
         <div
-          className="fixed bottom-20 right-4 z-40 flex flex-col-reverse gap-1.5 items-end"
-          style={{ maxWidth: 'calc(100vw - 2rem)' }}
+          className="fixed bottom-24 right-4 z-40 flex flex-col-reverse gap-2 items-end"
+          style={{ width: '80vw' }}
         >
           {previews.map((item) => (
             <button
               key={item.id}
               onClick={handleOpen}
-              className="flex items-start gap-2 bg-gray-900/95 border border-gray-700 rounded-2xl px-3 py-2 shadow-xl text-left animate-slide-up max-w-xs"
+              className="w-full flex items-start gap-3 bg-gray-900/97 border border-gray-600 rounded-2xl px-4 py-3 shadow-2xl text-left animate-slide-up"
             >
-              <span className="text-gray-400 text-xs font-semibold whitespace-nowrap mt-0.5">
-                {item.name}
+              <span className="text-gray-300 font-semibold whitespace-nowrap mt-0.5" style={{ fontSize: 16 }}>
+                {item.name}:
               </span>
-              <span className="text-white text-xs break-words line-clamp-2">
+              <span className="text-white break-words line-clamp-2" style={{ fontSize: 16 }}>
                 {item.message}
               </span>
             </button>
@@ -79,42 +79,42 @@ export default function MobileChatButton() {
         </div>
       )}
 
-      {/* Floating button */}
-      <button
-        onClick={handleOpen}
-        className="fixed bottom-4 right-4 z-40 w-14 h-14 bg-gold text-casino rounded-full shadow-2xl flex items-center justify-center text-2xl active:scale-95 transition-transform"
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-      >
-        💬
-        {unread > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-            {unread > 9 ? '9+' : unread}
-          </span>
+      {/* Floating buttons: red envelope + chat */}
+      <div className="fixed bottom-4 right-4 z-40 flex flex-col gap-3 items-center">
+        {!isSpectator && (
+          <button
+            onClick={() => setShowEnvelope(true)}
+            className="w-14 h-14 bg-red-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl active:scale-95 transition-transform"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+          >
+            🧧
+          </button>
         )}
-      </button>
+        <button
+          onClick={handleOpen}
+          className="relative w-14 h-14 bg-gold text-casino rounded-full shadow-2xl flex items-center justify-center text-2xl active:scale-95 transition-transform"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+        >
+          💬
+          {unread > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              {unread > 9 ? '9+' : unread}
+            </span>
+          )}
+        </button>
+      </div>
 
       {/* Full-screen chat overlay */}
       {open && (
         <div className="fixed inset-0 z-50 flex flex-col bg-gray-950">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 flex-shrink-0">
             <span className="text-white font-bold">聊天</span>
-            <div className="flex items-center gap-3">
-              {!isSpectator && (
-                <button
-                  onClick={() => setShowEnvelope(true)}
-                  className="text-xl active:scale-110 transition-transform"
-                  title="发红包"
-                >
-                  🧧
-                </button>
-              )}
-              <button
-                onClick={() => setOpen(false)}
-                className="text-gray-400 text-2xl leading-none active:text-white"
-              >
-                ×
-              </button>
-            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="text-gray-400 text-2xl leading-none active:text-white"
+            >
+              ×
+            </button>
           </div>
           <div className="flex-1 overflow-hidden">
             <ChatPanel />
