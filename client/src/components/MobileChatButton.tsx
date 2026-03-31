@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore, ChatMessage } from '../store/gameStore';
 import ChatPanel from './ChatPanel';
+import RedEnvelopeModal from './RedEnvelopeModal';
 
 interface PreviewItem {
   id: string;
@@ -10,8 +11,9 @@ interface PreviewItem {
 }
 
 export default function MobileChatButton() {
-  const { chatMessages, mySessionId } = useGameStore();
+  const { chatMessages, mySessionId, isSpectator } = useGameStore();
   const [open, setOpen] = useState(false);
+  const [showEnvelope, setShowEnvelope] = useState(false);
   const [previews, setPreviews] = useState<PreviewItem[]>([]);
   const prevLenRef = useRef(chatMessages.length);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -96,18 +98,31 @@ export default function MobileChatButton() {
         <div className="fixed inset-0 z-50 flex flex-col bg-gray-950">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 flex-shrink-0">
             <span className="text-white font-bold">聊天</span>
-            <button
-              onClick={() => setOpen(false)}
-              className="text-gray-400 text-2xl leading-none active:text-white"
-            >
-              ×
-            </button>
+            <div className="flex items-center gap-3">
+              {!isSpectator && (
+                <button
+                  onClick={() => setShowEnvelope(true)}
+                  className="text-xl active:scale-110 transition-transform"
+                  title="发红包"
+                >
+                  🧧
+                </button>
+              )}
+              <button
+                onClick={() => setOpen(false)}
+                className="text-gray-400 text-2xl leading-none active:text-white"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div className="flex-1 overflow-hidden">
             <ChatPanel />
           </div>
         </div>
       )}
+
+      {showEnvelope && <RedEnvelopeModal onClose={() => setShowEnvelope(false)} />}
     </>
   );
 }
