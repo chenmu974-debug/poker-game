@@ -699,6 +699,24 @@ export function setupGameManager(io: Server) {
       if (room.gameState) broadcastGameState(io, room);
     });
 
+    socket.on('taunt', ({ roomCode, sessionId, targetSessionId, content }: {
+      roomCode: string; sessionId: string; targetSessionId: string; content: string;
+    }) => {
+      const room = getRoom(roomCode);
+      if (!room) return;
+      const sender = room.players.find((p) => p.sessionId === sessionId);
+      const target = room.players.find((p) => p.sessionId === targetSessionId);
+      if (!sender || !target || content.length > 50) return;
+      const chatMsg = {
+        id: uuidv4(), sessionId, name: sender.name, avatar: sender.avatar,
+        message: `🗡 向 ${target.name} 发起嘲讽：${content}`,
+        timestamp: Date.now(),
+      };
+      socket.emit('chat_message', chatMsg);
+      socket.to(roomCode).emit('chat_message', chatMsg);
+      io.to(roomCode).emit('taunt_received', { targetSessionId });
+    });
+
     socket.on('leave_room', ({ roomCode, sessionId }: { roomCode: string; sessionId: string }) => {
       handleDisconnect(io, socket, roomCode, sessionId, true);
     });

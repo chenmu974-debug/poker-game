@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { PersonalizedPlayer } from '../store/gameStore';
 import PlayingCard from './PlayingCard';
 import ChipStack from './ChipStack';
@@ -8,16 +9,24 @@ interface Props {
   player: PersonalizedPlayer;
   isMe: boolean;
   tablePosition: number;
+  isTaunted?: boolean;
+  onTaunt?: (sessionId: string, name: string) => void;
 }
 
-export default function PlayerSeat({ player, isMe, tablePosition }: Props) {
+export default function PlayerSeat({ player, isMe, tablePosition, isTaunted, onTaunt }: Props) {
   const isFolded = player.status === 'folded';
   const isAllIn = player.status === 'all-in';
   const isEliminated = player.status === 'eliminated';
   const isActive = player.isCurrentTurn;
+  const [showMenu, setShowMenu] = useState(false);
 
   // Cards layout: for bottom seats show cards above the avatar, top seats below
   const cardsAbove = tablePosition >= 4; // top half of table
+
+  const handleAvatarClick = () => {
+    if (isMe || !onTaunt) return;
+    setShowMenu((v) => !v);
+  };
 
   return (
     <div className="flex flex-col items-center gap-1" style={{ minWidth: 90 }}>
@@ -52,6 +61,7 @@ export default function PlayerSeat({ player, isMe, tablePosition }: Props) {
             ${isActive ? 'border-gold shadow-lg shadow-gold/20' : ''}
             ${isFolded || isEliminated ? 'opacity-50' : ''}
             ${!player.isConnected ? 'opacity-60' : ''}
+            ${isTaunted ? 'animate-shake' : ''}
           `}
           style={{ minWidth: 80 }}
         >
@@ -70,8 +80,11 @@ export default function PlayerSeat({ player, isMe, tablePosition }: Props) {
             )}
           </div>
 
-          {/* Avatar */}
-          <div className={`text-2xl ${isFolded ? 'grayscale' : ''}`}>
+          {/* Avatar — clickable for other players */}
+          <div
+            className={`text-2xl ${isFolded ? 'grayscale' : ''} ${!isMe && onTaunt ? 'cursor-pointer select-none' : ''}`}
+            onClick={handleAvatarClick}
+          >
             {AVATARS[player.avatar] ?? '🎩'}
           </div>
 
@@ -95,6 +108,25 @@ export default function PlayerSeat({ player, isMe, tablePosition }: Props) {
           )}
           {isEliminated && (
             <div className="text-xs text-red-400 font-medium">已淘汰</div>
+          )}
+
+          {/* Taunt popup menu */}
+          {showMenu && !isMe && onTaunt && (
+            <>
+              {/* backdrop */}
+              <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
+              <div className="absolute z-40 top-full mt-1 left-1/2 -translate-x-1/2 bg-gray-900 border border-gray-600 rounded-xl shadow-2xl overflow-hidden whitespace-nowrap">
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    onTaunt(player.sessionId, player.name);
+                  }}
+                  className="block w-full px-4 py-2.5 text-sm text-red-300 hover:bg-gray-800 active:bg-gray-700 text-left"
+                >
+                  🗡 发起嘲讽
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>

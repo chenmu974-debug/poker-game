@@ -11,6 +11,7 @@ import FoldTaunt from '../components/FoldTaunt';
 import VoiceChat from '../components/VoiceChat';
 import RedEnvelopeModal from '../components/RedEnvelopeModal';
 import MobileChatButton from '../components/MobileChatButton';
+import TauntModal from '../components/TauntModal';
 
 // Seat positions for up to 8 players (percentages of table width/height)
 // Index 0 = bottom center (you), going counter-clockwise
@@ -26,8 +27,9 @@ const SEAT_POSITIONS = [
 ];
 
 export default function GameTable() {
-  const { gameState, mySessionId, showWinnerOverlay, winners, isSpectator, currentRoomCode } = useGameStore();
+  const { gameState, mySessionId, showWinnerOverlay, winners, isSpectator, currentRoomCode, tauntedSessionId } = useGameStore();
   const [showRedEnvelope, setShowRedEnvelope] = useState(false);
+  const [tauntTarget, setTauntTarget] = useState<{ sessionId: string; name: string } | null>(null);
   if (!gameState) return null;
 
   const { players } = gameState;
@@ -100,6 +102,8 @@ export default function GameTable() {
                   player={player}
                   isMe={isMe}
                   tablePosition={visualIdx}
+                  isTaunted={tauntedSessionId === player.sessionId}
+                  onTaunt={!isMe && !isSpectator ? (sid, name) => setTauntTarget({ sessionId: sid, name }) : undefined}
                 />
               </div>
             );
@@ -136,6 +140,13 @@ export default function GameTable() {
       <EmojiReactions />
       <FoldTaunt />
       {showRedEnvelope && <RedEnvelopeModal onClose={() => setShowRedEnvelope(false)} />}
+      {tauntTarget && (
+        <TauntModal
+          targetSessionId={tauntTarget.sessionId}
+          targetName={tauntTarget.name}
+          onClose={() => setTauntTarget(null)}
+        />
+      )}
 
       {/* Mobile floating chat button */}
       <div className="md:hidden">

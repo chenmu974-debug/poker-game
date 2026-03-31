@@ -15,7 +15,7 @@ function App() {
     addToast, setFinalResult, clearGameState, reset,
     addChatMessage, addEmojiReaction, removeEmojiReaction,
     addFoldAnimation, removeFoldAnimation, setIsSpectator,
-    addVoiceUser, removeVoiceUser,
+    addVoiceUser, removeVoiceUser, setTauntedSessionId,
   } = useGameStore();
 
   // Track whether current error is from an auto session-restore attempt
@@ -136,6 +136,10 @@ function App() {
     });
     socket.on('voice_user_joined', ({ sessionId }: { sessionId: string }) => addVoiceUser(sessionId));
     socket.on('voice_user_left', ({ sessionId }: { sessionId: string }) => removeVoiceUser(sessionId));
+    socket.on('taunt_received', ({ targetSessionId }: { targetSessionId: string }) => {
+      setTauntedSessionId(targetSessionId);
+      setTimeout(() => setTauntedSessionId(null), 1000);
+    });
 
     return () => {
       socket.off('room_updated');
@@ -157,6 +161,7 @@ function App() {
       socket.off('red_envelope_received');
       socket.off('voice_user_joined');
       socket.off('voice_user_left');
+      socket.off('taunt_received');
     };
   }, []);
 

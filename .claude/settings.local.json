@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Read(//c/Users/dlfzm/.claude/projects/C--Users-dlfzm-poker-game/**)",
+      "Bash(python -c \":*)",
+      "Bash(python:*)",
+      "Bash(grep -v \"^$\")",
+      "Bash(grep -v \"^\"\"text\"\":\"\"$\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

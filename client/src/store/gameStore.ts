@@ -178,6 +178,7 @@ interface GameStore {
   foldAnimations: FoldAnimation[];
   isSpectator: boolean;
   voiceUsers: string[];
+  tauntedSessionId: string | null;
 
   // UI
   toasts: Toast[];
@@ -207,6 +208,7 @@ interface GameStore {
   setVoiceUsers: (users: string[]) => void;
   addVoiceUser: (sessionId: string) => void;
   removeVoiceUser: (sessionId: string) => void;
+  setTauntedSessionId: (id: string | null) => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -231,6 +233,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   foldAnimations: [],
   isSpectator: false,
   voiceUsers: [],
+  tauntedSessionId: null,
   toasts: [],
 
   setIdentity: (sessionId, name, avatar) => set({ mySessionId: sessionId, myName: name, myAvatar: avatar }),
@@ -272,4 +275,5 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setVoiceUsers: (users) => set({ voiceUsers: users }),
   addVoiceUser: (sessionId) => set((s) => ({ voiceUsers: s.voiceUsers.includes(sessionId) ? s.voiceUsers : [...s.voiceUsers, sessionId] })),
   removeVoiceUser: (sessionId) => set((s) => ({ voiceUsers: s.voiceUsers.filter((id) => id !== sessionId) })),
+  setTauntedSessionId: (id) => set({ tauntedSessionId: id }),
 }));
