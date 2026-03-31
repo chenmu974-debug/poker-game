@@ -605,33 +605,68 @@ export function setupGameManager(io: Server) {
       roomCode: string; sessionId: string; amount: number; targetSessionId?: string;
     }) => {
       const room = getRoom(roomCode);
-      if (!room || room.isGameStarted) return;
-      const sender = room.players.find((p) => p.sessionId === sessionId);
-      if (!sender || amount <= 0 || sender.chips < amount) return;
+      if (!room) { socket.emit('error', { message: '房间不存在' }); return; }
 
+      // Block during active hand (allow in waiting room or between hands)
+      if (room.gameState && room.gameState.phase !== 'waiting' && room.gameState.playersToAct.length > 0) {
+        socket.emit('error', { message: '游戏进行中无法发红包，请等待本局结束' }); return;
+      }
+
+      const sender = room.players.find((p) => p.sessionId === sessionId);
+      if (!sender) { socket.emit('error', { message: '玩家不存在' }); return; }
+
+      const parsedAmount = Math.floor(Number(amount));
+      if (!parsedAmount || parsedAmount <= 0) { socket.emit('error', { message: '红包金额无效' }); return; }
+
+      // Use gameState chips if game is active (more accurate), otherwise room chips
+      const senderChips = room.gameState
+        ? (room.gameState.players.find((p) => p.sessionId === sessionId)?.chips ?? sender.chips)
+        : sender.chips;
+      if (senderChips < parsedAmount) {
+        socket.emit('error', { message: `筹码不足，当前余额 $${senderChips}` }); return;
+      }
+
+      const envId = uuidv4();
       if (targetSessionId) {
         const target = room.players.find((p) => p.sessionId === targetSessionId);
-        if (!target) return;
-        sender.chips -= amount;
-        target.chips += amount;
+        if (!target) { socket.emit('error', { message: '目标玩家不存在' }); return; }
+        sender.chips -= parsedAmount;
+        target.chips += parsedAmount;
+        if (room.gameState) {
+          const gSender = room.gameState.players.find((p) => p.sessionId === sessionId);
+          const gTarget = room.gameState.players.find((p) => p.sessionId === targetSessionId);
+          if (gSender) gSender.chips -= parsedAmount;
+          if (gTarget) gTarget.chips += parsedAmount;
+        }
         io.to(roomCode).emit('red_envelope_received', {
-          id: uuidv4(), fromName: sender.name, fromSessionId: sessionId,
-          toName: target.name, toSessionId: targetSessionId, amount,
+          id: envId, fromName: sender.name, fromSessionId: sessionId,
+          toName: target.name, toSessionId: targetSessionId, amount: parsedAmount,
         });
+        addLog(io, room, `🧧 ${sender.name} 给 ${target.name} 发了 $${parsedAmount} 红包`);
       } else {
         const others = room.players.filter((p) => p.sessionId !== sessionId);
-        if (others.length === 0) return;
-        const perPerson = Math.floor(amount / others.length);
-        if (perPerson === 0) return;
+        if (others.length === 0) { socket.emit('error', { message: '没有其他玩家可以发送' }); return; }
+        const perPerson = Math.floor(parsedAmount / others.length);
+        if (perPerson === 0) { socket.emit('error', { message: '金额太小，无法平分' }); return; }
         const actual = perPerson * others.length;
         sender.chips -= actual;
         for (const p of others) p.chips += perPerson;
+        if (room.gameState) {
+          const gSender = room.gameState.players.find((p) => p.sessionId === sessionId);
+          if (gSender) gSender.chips -= actual;
+          for (const p of others) {
+            const gp = room.gameState.players.find((gp) => gp.sessionId === p.sessionId);
+            if (gp) gp.chips += perPerson;
+          }
+        }
         io.to(roomCode).emit('red_envelope_received', {
-          id: uuidv4(), fromName: sender.name, fromSessionId: sessionId,
+          id: envId, fromName: sender.name, fromSessionId: sessionId,
           toName: null, toSessionId: null, amount: actual, perPerson,
         });
+        addLog(io, room, `🧧 ${sender.name} 给所有人发了红包，每人 $${perPerson}`);
       }
       broadcastRoomState(io, room);
+      if (room.gameState) broadcastGameState(io, room);
     });
 
     socket.on('leave_room', ({ roomCode, sessionId }: { roomCode: string; sessionId: string }) => {

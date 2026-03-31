@@ -105,6 +105,7 @@ export default function WaitingRoom() {
                   {!p.isConnected && (
                     <span className="text-xs text-red-400">离线</span>
                   )}
+                  <span className="text-xs text-gold font-mono">${p.chips}</span>
                   <div className={`w-3 h-3 rounded-full ${p.isReady ? 'bg-green-400' : 'bg-gray-600'}`} />
                   <span className={`text-xs ${p.isReady ? 'text-green-400' : 'text-gray-500'}`}>
                     {p.isReady ? '已准备' : '未准备'}

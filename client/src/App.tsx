@@ -107,7 +107,16 @@ function App() {
       setTimeout(() => removeFoldAnimation(id), 3500);
     });
     socket.on('red_envelope_received', (env) => {
-      addToast(`🧧 ${env.fromName} 发了红包！${env.perPerson ? `每人 $${env.perPerson}` : `$${env.amount}`}`, 'success');
+      const detail = env.toName ? `给 ${env.toName} $${env.amount}` : `给所有人，每人 $${env.perPerson ?? env.amount}`;
+      addToast(`🧧 ${env.fromName} 发红包：${detail}`, 'success');
+      addChatMessage({
+        id: env.id,
+        sessionId: env.fromSessionId,
+        name: env.fromName,
+        avatar: 0,
+        message: `🧧 发红包 ${detail}`,
+        timestamp: Date.now(),
+      });
     });
     socket.on('voice_user_joined', ({ sessionId }: { sessionId: string }) => addVoiceUser(sessionId));
     socket.on('voice_user_left', ({ sessionId }: { sessionId: string }) => removeVoiceUser(sessionId));
