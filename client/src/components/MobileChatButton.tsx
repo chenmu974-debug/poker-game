@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import socket from '../socket';
 import ChatPanel from './ChatPanel';
@@ -11,9 +11,30 @@ export default function MobileChatButton() {
   const [chatOpen, setChatOpen] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [showEnvelope, setShowEnvelope] = useState(false);
+  // IDs of messages currently visible in preview
+  const [visibleIds, setVisibleIds] = useState<Set<string>>(new Set());
+  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
-  // Latest 2 messages for preview
-  const latest2 = chatMessages.slice(-2);
+  // When new messages arrive, add them to visible set and schedule 5s removal
+  useEffect(() => {
+    const last2 = chatMessages.slice(-2);
+    last2.forEach((msg) => {
+      if (timersRef.current.has(msg.id)) return; // already scheduled
+      setVisibleIds((prev) => new Set([...prev, msg.id]));
+      const t = setTimeout(() => {
+        setVisibleIds((prev) => {
+          const next = new Set(prev);
+          next.delete(msg.id);
+          return next;
+        });
+        timersRef.current.delete(msg.id);
+      }, 5000);
+      timersRef.current.set(msg.id, t);
+    });
+  }, [chatMessages]);
+
+  // Preview: latest 2 that are still in visibleIds
+  const preview2 = chatMessages.slice(-2).filter((m) => visibleIds.has(m.id));
 
   const openChat = () => {
     setChatOpen(true);
@@ -28,17 +49,16 @@ export default function MobileChatButton() {
 
   return (
     <>
-      {/* Preview bubbles — top of table, clear of player seats */}
-      {!chatOpen && latest2.length > 0 && (
+      {/* Preview bubbles — click-through, z below player seats */}
+      {!chatOpen && preview2.length > 0 && (
         <div
-          className="fixed z-30 flex flex-col gap-1.5"
-          style={{ top: 80, left: 8, right: 70 }}
+          className="fixed flex flex-col gap-1.5"
+          style={{ top: 80, left: 8, right: 70, pointerEvents: 'none', zIndex: 4 }}
         >
-          {latest2.map((msg) => (
-            <button
+          {preview2.map((msg) => (
+            <div
               key={msg.id}
-              onClick={openChat}
-              className="flex items-start gap-2 bg-gray-900/95 border border-gray-600 rounded-xl px-3 py-2 shadow-xl text-left"
+              className="flex items-start gap-2 bg-gray-900/90 border border-gray-600 rounded-xl px-3 py-2 shadow-xl"
             >
               <span
                 className={`font-semibold whitespace-nowrap ${msg.sessionId === mySessionId ? 'text-gold' : 'text-gray-300'}`}
@@ -49,7 +69,7 @@ export default function MobileChatButton() {
               <span className="text-white line-clamp-1" style={{ fontSize: 14 }}>
                 {msg.message}
               </span>
-            </button>
+            </div>
           ))}
         </div>
       )}
