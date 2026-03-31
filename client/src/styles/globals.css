@@ -79,3 +79,23 @@ input[type="range"]::-webkit-slider-thumb {
 @media (max-width: 768px) {
   html, body, #root { overflow: auto; }
 }
+
+@keyframes float-up {
+  0% { transform: translateX(-50%) translateY(0); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(-150px); opacity: 0; }
+}
+
+@keyframes bounce-fade {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+
+.animate-float-up {
+  animation: float-up 3s ease-out forwards;
+}
+
+.animate-bounce-fade {
+  animation: bounce-fade 3.5s ease-out forwards;
+}

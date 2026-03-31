@@ -1,10 +1,15 @@
+import { useState } from 'react';
 import { useGameStore, PersonalizedPlayer } from '../store/gameStore';
 import PlayerSeat from '../components/PlayerSeat';
 import CommunityCards from '../components/CommunityCards';
 import ActionPanel from '../components/ActionPanel';
 import PotDisplay from '../components/PotDisplay';
-import GameLog from '../components/GameLog';
+import ChatPanel from '../components/ChatPanel';
 import WinnerOverlay from '../components/WinnerOverlay';
+import EmojiReactions from '../components/EmojiReactions';
+import FoldTaunt from '../components/FoldTaunt';
+import VoiceChat from '../components/VoiceChat';
+import RedEnvelopeModal from '../components/RedEnvelopeModal';
 
 // Seat positions for up to 8 players (percentages of table width/height)
 // Index 0 = bottom center (you), going counter-clockwise
@@ -20,7 +25,8 @@ const SEAT_POSITIONS = [
 ];
 
 export default function GameTable() {
-  const { gameState, mySessionId, showWinnerOverlay, winners } = useGameStore();
+  const { gameState, mySessionId, showWinnerOverlay, winners, isSpectator, currentRoomCode } = useGameStore();
+  const [showRedEnvelope, setShowRedEnvelope] = useState(false);
   if (!gameState) return null;
 
   const { players } = gameState;
@@ -31,7 +37,7 @@ export default function GameTable() {
   // Reorder players so that "me" is always at visual seat 0 (bottom)
   const orderedPlayers: (PersonalizedPlayer | null)[] = Array(8).fill(null);
   for (let i = 0; i < players.length; i++) {
-    const visualSeat = (i - myIdx + players.length) % players.length;
+    const visualSeat = myIdx >= 0 ? (i - myIdx + players.length) % players.length : i;
     orderedPlayers[visualSeat] = players[i];
   }
 
@@ -39,6 +45,13 @@ export default function GameTable() {
     <div className="h-screen bg-casino flex overflow-hidden">
       {/* Main table area */}
       <div className="flex-1 relative flex items-center justify-center p-4">
+        {/* Spectator banner */}
+        {isSpectator && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 bg-purple-600/80 text-white text-xs font-bold px-4 py-1 rounded-full">
+            👁 观战模式
+          </div>
+        )}
+
         {/* Table */}
         <div
           className="relative"
@@ -95,19 +108,33 @@ export default function GameTable() {
 
       {/* Right sidebar */}
       <div className="w-64 flex flex-col border-l border-gray-800 bg-gray-950">
-        <div className="p-3 border-b border-gray-800">
-          <div className="text-gray-500 text-xs">
-            第 {gameState.handNumber} 局 · {phaseLabel(gameState.phase)}
+        {/* Header */}
+        <div className="p-2 border-b border-gray-800 flex items-center justify-between flex-shrink-0">
+          <div className="text-gray-500 text-xs">第 {gameState.handNumber} 局 · {phaseLabel(gameState.phase)}</div>
+          <div className="flex items-center gap-1">
+            {currentRoomCode && <VoiceChat roomCode={currentRoomCode} />}
+            {!isSpectator && (
+              <button
+                onClick={() => setShowRedEnvelope(true)}
+                className="p-1 text-sm hover:scale-110 transition-transform"
+                title="发红包"
+              >
+                🧧
+              </button>
+            )}
           </div>
         </div>
-        <GameLog />
+        <ChatPanel />
       </div>
 
-      {/* Action Panel */}
-      <ActionPanel />
+      {/* Action Panel (hidden for spectators) */}
+      {!isSpectator && <ActionPanel />}
 
-      {/* Winner Overlay */}
+      {/* Overlays */}
       {showWinnerOverlay && <WinnerOverlay winners={winners} />}
+      <EmojiReactions />
+      <FoldTaunt />
+      {showRedEnvelope && <RedEnvelopeModal onClose={() => setShowRedEnvelope(false)} />}
     </div>
   );
 }

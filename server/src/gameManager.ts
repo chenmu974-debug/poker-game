@@ -103,11 +103,38 @@ function personalizeState(gs: GameState, forSessionId: string): PersonalizedGame
   };
 }
 
+function spectatorGameState(gs: GameState): PersonalizedGameState {
+  const players: PersonalizedPlayer[] = gs.players.map((p) => ({
+    id: p.id, sessionId: p.sessionId, name: p.name, avatar: p.avatar,
+    chips: p.chips, bet: p.bet, totalBet: p.totalBet,
+    holeCards: gs.phase === 'showdown' ? p.holeCards : [],
+    isHoleCardsVisible: gs.phase === 'showdown',
+    status: p.status, isDealer: p.isDealer, isSmallBlind: p.isSmallBlind,
+    isBigBlind: p.isBigBlind, isCurrentTurn: p.isCurrentTurn,
+    isConnected: p.isConnected, seatIndex: p.seatIndex,
+  }));
+  return {
+    roomCode: gs.roomCode, phase: gs.phase, players,
+    communityCards: gs.communityCards, pot: gs.pot, sidePots: gs.sidePots,
+    currentPlayerIndex: gs.currentPlayerIndex, dealerIndex: gs.dealerIndex,
+    smallBlindIndex: gs.smallBlindIndex, bigBlindIndex: gs.bigBlindIndex,
+    currentBet: gs.currentBet, lastRaiseAmount: gs.lastRaiseAmount,
+    handNumber: gs.handNumber, mySessionId: 'spectator',
+    isMyTurn: false, minRaise: 0, maxRaise: 0,
+  };
+}
+
 function broadcastGameState(io: Server, room: Room) {
   if (!room.gameState) return;
   for (const player of room.players) {
     if (player.isConnected) {
       io.to(player.id).emit('game_state', personalizeState(room.gameState, player.sessionId));
+    }
+  }
+  if (room.spectators.length > 0) {
+    const sv = spectatorGameState(room.gameState);
+    for (const spec of room.spectators) {
+      io.to(spec.socketId).emit('game_state', sv);
     }
   }
 }
@@ -188,6 +215,10 @@ function handleAction(
   };
   addLog(io, room, `${player.name} ${actionLabels[action] ?? action}`);
   io.to(room.code).emit('action_broadcast', { playerName: player.name, action, amount });
+
+  if (action === 'fold') {
+    io.to(room.code).emit('fold_animation', { sessionId, playerName: player.name });
+  }
 
   room.gameState = processAction(room.gameState, sessionId, action, amount);
   checkAndAdvance(io, room);
@@ -284,6 +315,11 @@ function endHand(io: Server, room: Room) {
       });
       io.to(player.id).emit('game_state', ps);
     }
+  }
+
+  const showdownSv = spectatorGameState({ ...showdownState });
+  for (const spec of room.spectators) {
+    io.to(spec.socketId).emit('game_state', showdownSv);
   }
 
   for (const w of result.winners) {
@@ -410,7 +446,7 @@ export function setupGameManager(io: Server) {
       }
 
       if (room.isGameStarted) {
-        room.spectators.push({ socketId: socket.id, name: playerName });
+        room.spectators.push({ socketId: socket.id, name: playerName, sessionId });
         socket.join(roomCode);
         socket.emit('room_joined', { code: roomCode, isSpectator: true });
         return;
@@ -512,6 +548,90 @@ export function setupGameManager(io: Server) {
       io.to(roomCode).emit('game_restarted', {});
       broadcastRoomState(io, room);
       io.to(roomCode).emit('game_log', { message: '', logs: ['🔄 已重置，请重新准备'] });
+    });
+
+    socket.on('chat_message', ({ roomCode, sessionId, message }: {
+      roomCode: string; sessionId: string; message: string;
+    }) => {
+      const room = getRoom(roomCode);
+      if (!room) return;
+      const player = room.players.find((p) => p.sessionId === sessionId);
+      const spec = room.spectators.find((s) => s.sessionId === sessionId);
+      const name = player?.name ?? spec?.name ?? '观众';
+      const avatar = player?.avatar ?? 0;
+      if (!message.trim() || message.length > 200) return;
+      io.to(roomCode).emit('chat_message', {
+        id: uuidv4(), sessionId, name, avatar,
+        message: message.trim(), timestamp: Date.now(),
+      });
+    });
+
+    socket.on('emoji_reaction', ({ roomCode, sessionId, emoji }: {
+      roomCode: string; sessionId: string; emoji: string;
+    }) => {
+      const room = getRoom(roomCode);
+      if (!room) return;
+      const player = room.players.find((p) => p.sessionId === sessionId);
+      const name = player?.name ?? '观众';
+      io.to(roomCode).emit('emoji_reaction', {
+        id: uuidv4(), sessionId, name, emoji,
+      });
+    });
+
+    socket.on('voice_join', ({ roomCode, sessionId }: { roomCode: string; sessionId: string }) => {
+      const room = getRoom(roomCode);
+      if (!room) return;
+      socket.to(roomCode).emit('voice_user_joined', { sessionId });
+    });
+
+    socket.on('voice_leave', ({ roomCode, sessionId }: { roomCode: string; sessionId: string }) => {
+      const room = getRoom(roomCode);
+      if (!room) return;
+      socket.to(roomCode).emit('voice_user_left', { sessionId });
+    });
+
+    socket.on('webrtc_signal', ({ roomCode, targetSessionId, fromSessionId, signal }: {
+      roomCode: string; targetSessionId: string; fromSessionId: string; signal: unknown;
+    }) => {
+      const room = getRoom(roomCode);
+      if (!room) return;
+      const target = room.players.find((p) => p.sessionId === targetSessionId);
+      if (target?.id) {
+        io.to(target.id).emit('webrtc_signal', { fromSessionId, signal });
+      }
+    });
+
+    socket.on('send_red_envelope', ({ roomCode, sessionId, amount, targetSessionId }: {
+      roomCode: string; sessionId: string; amount: number; targetSessionId?: string;
+    }) => {
+      const room = getRoom(roomCode);
+      if (!room || room.isGameStarted) return;
+      const sender = room.players.find((p) => p.sessionId === sessionId);
+      if (!sender || amount <= 0 || sender.chips < amount) return;
+
+      if (targetSessionId) {
+        const target = room.players.find((p) => p.sessionId === targetSessionId);
+        if (!target) return;
+        sender.chips -= amount;
+        target.chips += amount;
+        io.to(roomCode).emit('red_envelope_received', {
+          id: uuidv4(), fromName: sender.name, fromSessionId: sessionId,
+          toName: target.name, toSessionId: targetSessionId, amount,
+        });
+      } else {
+        const others = room.players.filter((p) => p.sessionId !== sessionId);
+        if (others.length === 0) return;
+        const perPerson = Math.floor(amount / others.length);
+        if (perPerson === 0) return;
+        const actual = perPerson * others.length;
+        sender.chips -= actual;
+        for (const p of others) p.chips += perPerson;
+        io.to(roomCode).emit('red_envelope_received', {
+          id: uuidv4(), fromName: sender.name, fromSessionId: sessionId,
+          toName: null, toSessionId: null, amount: actual, perPerson,
+        });
+      }
+      broadcastRoomState(io, room);
     });
 
     socket.on('leave_room', ({ roomCode, sessionId }: { roomCode: string; sessionId: string }) => {

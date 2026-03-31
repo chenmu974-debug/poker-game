@@ -115,6 +115,38 @@ export interface FinalResult {
   hostSessionId: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  sessionId: string;
+  name: string;
+  avatar: number;
+  message: string;
+  timestamp: number;
+}
+
+export interface EmojiReaction {
+  id: string;
+  sessionId: string;
+  name: string;
+  emoji: string;
+}
+
+export interface FoldAnimation {
+  id: string;
+  sessionId: string;
+  playerName: string;
+}
+
+export interface RedEnvelope {
+  id: string;
+  fromName: string;
+  fromSessionId: string;
+  toName: string | null;
+  toSessionId: string | null;
+  amount: number;
+  perPerson?: number;
+}
+
 interface GameStore {
   // Identity
   mySessionId: string;
@@ -140,6 +172,13 @@ interface GameStore {
   // Final result
   finalResult: FinalResult | null;
 
+  // Chat & reactions
+  chatMessages: ChatMessage[];
+  emojiReactions: EmojiReaction[];
+  foldAnimations: FoldAnimation[];
+  isSpectator: boolean;
+  voiceUsers: string[];
+
   // UI
   toasts: Toast[];
 
@@ -158,6 +197,16 @@ interface GameStore {
   addToast: (message: string, type?: Toast['type']) => void;
   removeToast: (id: string) => void;
   reset: () => void;
+
+  addChatMessage: (msg: ChatMessage) => void;
+  addEmojiReaction: (reaction: EmojiReaction) => void;
+  removeEmojiReaction: (id: string) => void;
+  addFoldAnimation: (anim: FoldAnimation) => void;
+  removeFoldAnimation: (id: string) => void;
+  setIsSpectator: (v: boolean) => void;
+  setVoiceUsers: (users: string[]) => void;
+  addVoiceUser: (sessionId: string) => void;
+  removeVoiceUser: (sessionId: string) => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -177,6 +226,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   minRaise: 0,
   maxRaise: 0,
   finalResult: null,
+  chatMessages: [],
+  emojiReactions: [],
+  foldAnimations: [],
+  isSpectator: false,
+  voiceUsers: [],
   toasts: [],
 
   setIdentity: (sessionId, name, avatar) => set({ mySessionId: sessionId, myName: name, myAvatar: avatar }),
@@ -204,13 +258,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   removeToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
   reset: () => set({
-    currentRoomCode: null,
-    roomState: null,
-    gameState: null,
-    gameLogs: [],
-    winners: [],
-    showWinnerOverlay: false,
-    isMyTurn: false,
-    finalResult: null,
+    currentRoomCode: null, roomState: null, gameState: null, gameLogs: [],
+    winners: [], showWinnerOverlay: false, isMyTurn: false, finalResult: null,
+    chatMessages: [], emojiReactions: [], foldAnimations: [], isSpectator: false, voiceUsers: [],
   }),
+
+  addChatMessage: (msg) => set((s) => ({ chatMessages: [...s.chatMessages.slice(-99), msg] })),
+  addEmojiReaction: (r) => set((s) => ({ emojiReactions: [...s.emojiReactions, r] })),
+  removeEmojiReaction: (id) => set((s) => ({ emojiReactions: s.emojiReactions.filter((r) => r.id !== id) })),
+  addFoldAnimation: (a) => set((s) => ({ foldAnimations: [...s.foldAnimations, a] })),
+  removeFoldAnimation: (id) => set((s) => ({ foldAnimations: s.foldAnimations.filter((f) => f.id !== id) })),
+  setIsSpectator: (v) => set({ isSpectator: v }),
+  setVoiceUsers: (users) => set({ voiceUsers: users }),
+  addVoiceUser: (sessionId) => set((s) => ({ voiceUsers: s.voiceUsers.includes(sessionId) ? s.voiceUsers : [...s.voiceUsers, sessionId] })),
+  removeVoiceUser: (sessionId) => set((s) => ({ voiceUsers: s.voiceUsers.filter((id) => id !== sessionId) })),
 }));

@@ -13,6 +13,9 @@ function App() {
     setRoomState, setGameState, setRoomCode, setTurnInfo,
     addLog, setLogs, setWinners, setShowWinnerOverlay,
     addToast, setFinalResult, clearGameState, reset,
+    addChatMessage, addEmojiReaction, removeEmojiReaction,
+    addFoldAnimation, removeFoldAnimation, setIsSpectator,
+    addVoiceUser, removeVoiceUser,
   } = useGameStore();
 
   useEffect(() => {
@@ -81,7 +84,10 @@ function App() {
 
     socket.on('room_joined', ({ code, isSpectator }) => {
       setRoomCode(code);
-      if (isSpectator) addToast('以观众身份加入', 'info');
+      if (isSpectator) {
+        setIsSpectator(true);
+        addToast('以观众身份加入', 'info');
+      }
     });
 
     socket.on('error', ({ message }) => addToast(message, 'error'));
@@ -89,6 +95,22 @@ function App() {
     socket.on('player_eliminated', ({ playerName }) =>
       addLog(`💀 ${playerName} 已被淘汰`),
     );
+
+    socket.on('chat_message', (msg) => addChatMessage(msg));
+    socket.on('emoji_reaction', (reaction) => {
+      addEmojiReaction(reaction);
+      setTimeout(() => removeEmojiReaction(reaction.id), 3000);
+    });
+    socket.on('fold_animation', (anim) => {
+      const id = Date.now().toString() + Math.random();
+      addFoldAnimation({ ...anim, id });
+      setTimeout(() => removeFoldAnimation(id), 3500);
+    });
+    socket.on('red_envelope_received', (env) => {
+      addToast(`🧧 ${env.fromName} 发了红包！${env.perPerson ? `每人 $${env.perPerson}` : `$${env.amount}`}`, 'success');
+    });
+    socket.on('voice_user_joined', ({ sessionId }: { sessionId: string }) => addVoiceUser(sessionId));
+    socket.on('voice_user_left', ({ sessionId }: { sessionId: string }) => removeVoiceUser(sessionId));
 
     return () => {
       socket.off('room_updated');
@@ -104,6 +126,12 @@ function App() {
       socket.off('room_joined');
       socket.off('error');
       socket.off('player_eliminated');
+      socket.off('chat_message');
+      socket.off('emoji_reaction');
+      socket.off('fold_animation');
+      socket.off('red_envelope_received');
+      socket.off('voice_user_joined');
+      socket.off('voice_user_left');
     };
   }, []);
 

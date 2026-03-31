@@ -45,7 +45,7 @@ export interface Room {
   hostSessionId: string;
   settings: RoomSettings;
   players: Player[];
-  spectators: { socketId: string; name: string }[];
+  spectators: { socketId: string; name: string; sessionId: string }[];
   gameState: GameState | null;
   isGameStarted: boolean;
 }
