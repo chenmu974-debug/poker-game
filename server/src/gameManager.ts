@@ -633,10 +633,12 @@ export function setupGameManager(io: Server) {
           if (gSender) gSender.chips -= parsedAmount;
           if (gTarget) gTarget.chips += parsedAmount;
         }
-        io.to(roomCode).emit('red_envelope_received', {
+        const payload = {
           id: envId, fromName: sender.name, fromSessionId: sessionId,
           toName: target.name, toSessionId: targetSessionId, amount: parsedAmount,
-        });
+        };
+        socket.emit('red_envelope_received', payload);          // sender
+        socket.to(roomCode).emit('red_envelope_received', payload); // everyone else
         addLog(io, room, `🧧 ${sender.name} 给 ${target.name} 发了 $${parsedAmount} 红包`);
       } else {
         const others = room.players.filter((p) => p.sessionId !== sessionId);
@@ -654,10 +656,12 @@ export function setupGameManager(io: Server) {
             if (gp) gp.chips += perPerson;
           }
         }
-        io.to(roomCode).emit('red_envelope_received', {
+        const payload = {
           id: envId, fromName: sender.name, fromSessionId: sessionId,
           toName: null, toSessionId: null, amount: actual, perPerson,
-        });
+        };
+        socket.emit('red_envelope_received', payload);          // sender
+        socket.to(roomCode).emit('red_envelope_received', payload); // everyone else
         addLog(io, room, `🧧 ${sender.name} 给所有人发了红包，每人 $${perPerson}`);
       }
       broadcastRoomState(io, room);
