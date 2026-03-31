@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useGameStore } from './store/gameStore';
 import socket from './socket';
 import LobbyPage from './pages/LobbyPage';
@@ -18,6 +18,9 @@ function App() {
     addVoiceUser, removeVoiceUser,
   } = useGameStore();
 
+  // Track whether current error is from an auto session-restore attempt
+  const restoringRef = useRef(false);
+
   useEffect(() => {
     const savedSession = sessionStorage.getItem('pokerSession');
     if (savedSession) {
@@ -25,10 +28,13 @@ function App() {
         const { sessionId, name, avatar, roomCode } = JSON.parse(savedSession);
         useGameStore.getState().setIdentity(sessionId, name, avatar);
         if (roomCode) {
+          restoringRef.current = true;
           socket.connect();
           socket.emit('join_room', { roomCode, playerName: name, avatar, sessionId });
         }
-      } catch {}
+      } catch {
+        sessionStorage.removeItem('pokerSession');
+      }
     }
   }, []);
 
@@ -83,14 +89,24 @@ function App() {
     });
 
     socket.on('room_joined', ({ code, isSpectator }) => {
+      restoringRef.current = false;
       setRoomCode(code);
       if (isSpectator) {
         setIsSpectator(true);
-        addToast('以观众身份加入', 'info');
+        addToast('游戏已开始，你将以观战模式加入', 'info');
       }
     });
 
-    socket.on('error', ({ message }) => addToast(message, 'error'));
+    socket.on('error', ({ message, code: errCode }: { message: string; code?: string }) => {
+      if (restoringRef.current) {
+        restoringRef.current = false;
+        sessionStorage.removeItem('pokerSession');
+        addToast('原房间已解散，请重新创建或加入新房间', 'info');
+        reset();
+        return;
+      }
+      addToast(message, 'error');
+    });
 
     socket.on('player_eliminated', ({ playerName }) =>
       addLog(`💀 ${playerName} 已被淘汰`),

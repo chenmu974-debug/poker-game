@@ -11,6 +11,25 @@ import {
 
 const rooms = new Map<string, Room>();
 const actionTimers = new Map<string, NodeJS.Timeout>();
+const roomDeletionTimers = new Map<string, NodeJS.Timeout>();
+
+const SEAT_HOLD_MS = 3 * 60 * 1000;      // 3 min: keep disconnected player's seat
+const ROOM_KEEP_MS = 10 * 60 * 1000;     // 10 min: keep empty room before deleting
+
+function scheduleRoomDeletion(roomCode: string) {
+  cancelRoomDeletion(roomCode);
+  const timer = setTimeout(() => {
+    roomDeletionTimers.delete(roomCode);
+    rooms.delete(roomCode);
+    gameLogs.delete(roomCode);
+  }, ROOM_KEEP_MS);
+  roomDeletionTimers.set(roomCode, timer);
+}
+
+function cancelRoomDeletion(roomCode: string) {
+  const t = roomDeletionTimers.get(roomCode);
+  if (t) { clearTimeout(t); roomDeletionTimers.delete(roomCode); }
+}
 
 const PRAISE_TEXTS = [
   '你就是今晚的牌桌之王！',
@@ -423,10 +442,15 @@ export function setupGameManager(io: Server) {
       roomCode: string; playerName: string; avatar: number; sessionId: string;
     }) => {
       const room = getRoom(roomCode);
-      if (!room) { socket.emit('error', { message: '房间不存在' }); return; }
+      if (!room) {
+        socket.emit('error', { message: '房间不存在或已解散，请确认房间码是否正确', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
 
       const existing = room.players.find((p) => p.sessionId === sessionId);
       if (existing) {
+        // Reconnecting player — cancel any pending room deletion
+        cancelRoomDeletion(roomCode);
         existing.id = socket.id;
         existing.isConnected = true;
         existing.disconnectedAt = undefined;
@@ -439,7 +463,6 @@ export function setupGameManager(io: Server) {
           );
           broadcastGameState(io, room);
         }
-        // Send current logs
         const logs = gameLogs.get(roomCode) ?? [];
         socket.emit('game_log', { message: '', logs });
         return;
@@ -449,6 +472,12 @@ export function setupGameManager(io: Server) {
         room.spectators.push({ socketId: socket.id, name: playerName, sessionId });
         socket.join(roomCode);
         socket.emit('room_joined', { code: roomCode, isSpectator: true });
+        // Push current game state to spectator
+        if (room.gameState) {
+          socket.emit('game_state', spectatorGameState(room.gameState));
+          const logs = gameLogs.get(roomCode) ?? [];
+          socket.emit('game_log', { message: '', logs });
+        }
         return;
       }
 
@@ -456,6 +485,8 @@ export function setupGameManager(io: Server) {
         socket.emit('error', { message: '房间已满' }); return;
       }
 
+      // New player joining — cancel any pending room deletion
+      cancelRoomDeletion(roomCode);
       const player: Player = {
         id: socket.id, sessionId, name: playerName, avatar,
         chips: room.settings.startingChips,
@@ -707,7 +738,7 @@ function handleDisconnect(
       checkAndAdvance(io, room);
     }
     broadcastRoomState(io, room);
-    if (room.players.length === 0) rooms.delete(roomCode);
+    if (room.players.length === 0) scheduleRoomDeletion(roomCode);
     return;
   }
 
@@ -721,6 +752,7 @@ function handleDisconnect(
     }
   }
 
+  // Hold the seat for SEAT_HOLD_MS (3 min), then remove if still disconnected
   setTimeout(() => {
     const r = getRoom(roomCode);
     if (!r) return;
@@ -734,7 +766,7 @@ function handleDisconnect(
         broadcastGameState(io, r);
       }
       broadcastRoomState(io, r);
-      if (r.players.length === 0) rooms.delete(roomCode);
+      if (r.players.length === 0) scheduleRoomDeletion(roomCode);
     }
-  }, 60000);
+  }, SEAT_HOLD_MS);
 }

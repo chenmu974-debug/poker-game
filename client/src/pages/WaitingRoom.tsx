@@ -115,6 +115,9 @@ export default function WaitingRoom() {
           {roomState.players.length < 2 && (
             <p className="text-gray-500 text-xs text-center mt-3">至少需要2名玩家才能开始</p>
           )}
+          <p className="text-gray-600 text-xs text-center mt-2">
+            若所有人离开超过 10 分钟，房间将自动解散
+          </p>
         </div>
 
         {/* Actions */}
